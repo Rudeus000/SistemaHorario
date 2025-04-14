@@ -1,0 +1,163 @@
+import random
+from collections import defaultdict
+
+# Definición de variables
+DIAS = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes"]
+BLOQUES = list(range(1, 11))  # 10 bloques de 45 min desde las 7:00 AM
+
+# Definición de los profesores
+profesores = {
+    1: {'nombre': 'Ana López', 'disponibilidad': {
+        'Lunes': [1, 2, 3, 4],
+        'Miércoles': [5, 6, 7],
+        'Jueves': [8, 9, 10]
+    }},
+    2: {'nombre': 'Carlos Ruiz', 'disponibilidad': {
+        'Martes': [3, 4, 5],
+        'Jueves': [8, 9, 10],
+        'Viernes': [1, 2]
+    }},
+    3: {'nombre': 'María García', 'disponibilidad': {
+        'Lunes': [5, 6, 7],
+        'Martes': [1, 2, 3],
+        'Jueves': [4, 5, 6]
+    }},
+    4: {'nombre': 'Juan Pérez', 'disponibilidad': {
+        'Miércoles': [1, 2, 3],
+        'Jueves': [7, 8, 9],
+        'Viernes': [3, 4, 5]
+    }},
+    5: {'nombre': 'Sofía Rodríguez', 'disponibilidad': {
+        'Lunes': [8, 9, 10],
+        'Martes': [6, 7, 8],
+        'Jueves': [2, 3, 4]
+    }},
+    6: {'nombre': 'Luis González', 'disponibilidad': {
+        'Lunes': [2, 3, 4],
+        'Miércoles': [8, 9, 10],
+        'Viernes': [6, 7, 8]
+    }},
+    7: {'nombre': 'Eva Hernández', 'disponibilidad': {
+        'Martes': [9, 10, 1],
+        'Jueves': [6, 7, 8],
+        'Viernes': [4, 5, 6]
+    }},
+    8: {'nombre': 'Pedro Martínez', 'disponibilidad': {
+        'Lunes': [6, 7, 8],
+        'Miércoles': [4, 5, 6],
+        'Jueves': [1, 2, 3]
+    }},
+    9: {'nombre': 'Isabel Díaz', 'disponibilidad': {
+        'Martes': [2, 3, 4],
+        'Jueves': [9, 10, 1],
+        'Viernes': [7, 8, 9]
+    }},
+    10: {'nombre': 'Francisco Sánchez', 'disponibilidad': {
+        'Lunes': [9, 10, 1],
+        'Miércoles': [2, 3, 4],
+        'Jueves': [5, 6, 7]
+    }}
+}
+
+# Definición de las aulas
+aulas = {
+    1: {'capacidad': 30, 'tipo': 'Teoría'},
+    2: {'capacidad': 20, 'tipo': 'Laboratorio'},
+    3: {'capacidad': 25, 'tipo': 'Teoría'},
+    4: {'capacidad': 20, 'tipo': 'Laboratorio'},
+    5: {'capacidad': 30, 'tipo': 'Teoría'},
+    6: {'capacidad': 25, 'tipo': 'Teoría'},
+    7: {'capacidad': 20, 'tipo': 'Laboratorio'},
+    8: {'capacidad': 30, 'tipo': 'Teoría'},
+    9: {'capacidad': 25, 'tipo': 'Teoría'},
+    10: {'capacidad': 20, 'tipo': 'Laboratorio'}
+}
+
+# Definición de los cursos
+cursos = [
+    {'id': 1, 'nombre': 'Matemáticas', 'horas_semanales': 4.5, 'profesor_id': 1, 'aula_id': 1, 'alumnos': 25},
+    {'id': 2, 'nombre': 'Física', 'horas_semanales': 3, 'profesor_id': 2, 'aula_id': 2, 'alumnos': 15},
+    {'id': 3, 'nombre': 'Química', 'horas_semanales': 3, 'profesor_id': 3, 'aula_id': 3, 'alumnos': 20},
+    {'id': 4, 'nombre': 'Biología', 'horas_semanales': 3, 'profesor_id': 4, 'aula_id': 4, 'alumnos': 15},
+    {'id': 5, 'nombre': 'Historia', 'horas_semanales': 2, 'profesor_id': 5, 'aula_id': 5, 'alumnos': 25},
+    {'id': 6, 'nombre': 'Geografía', 'horas_semanales': 2, 'profesor_id': 6, 'aula_id': 6, 'alumnos': 20},
+    {'id': 7, 'nombre': 'Inglés', 'horas_semanales': 2, 'profesor_id': 7, 'aula_id': 7, 'alumnos': 15},
+    {'id': 8, 'nombre': 'Francés', 'horas_semanales': 2, 'profesor_id': 8, 'aula_id': 8, 'alumnos': 25},
+    {'id': 9, 'nombre': 'Alemán', 'horas_semanales': 2, 'profesor_id': 9, 'aula_id': 9, 'alumnos': 20},
+    {'id': 10, 'nombre': 'Italiano', 'horas_semanales': 2, 'profesor_id': 10, 'aula_id': 10, 'alumnos': 15}
+]
+
+def generar_horario_inteligente(profesores, aulas, cursos):
+    # Estructuras de control
+    horario = {dia: {bloque: None for bloque in BLOQUES} for dia in DIAS}
+    asignaciones_profesor = defaultdict(set)
+    asignaciones_aula = defaultdict(set)
+
+    # Ordenar cursos por complejidad (horas semanales)
+    cursos.sort(key=lambda x: x['horas_semanales'], reverse=True)
+
+    for curso in cursos:
+        horas_asignadas = 0
+        profesor = profesores[curso['profesor_id']]
+        aula = aulas[curso['aula_id']]
+
+        while horas_asignadas < curso['horas_semanales']:
+            asignado = False
+
+            # Buscar bloque disponible con prioridad en días no completos
+            dias_disponibles = list(profesor['disponibilidad'].keys())
+            random.shuffle(dias_disponibles)  # Aleatorizar el orden de los días
+
+            for dia in dias_disponibles:
+                bloques_disponibles = list(set(profesor['disponibilidad'][dia]) - asignaciones_profesor[(curso['profesor_id'], dia)])
+                random.shuffle(bloques_disponibles)  # Aleatorizar el orden de los bloques
+
+                for bloque in bloques_disponibles:
+                    if (bloque not in asignaciones_profesor[(curso['profesor_id'], dia)] and
+                        bloque not in asignaciones_aula[(curso['aula_id'], dia)]):
+
+                        # Verificar límite diario de 9 horas (12 bloques)
+                        if len(asignaciones_profesor[(curso['profesor_id'], dia)]) < 12:
+                            # Verificar capacidad del aula
+                            if aula['capacidad'] >= curso['alumnos']:
+                                # Asignar bloque
+                                horario[dia][bloque] = {
+                                    'curso': curso['nombre'],
+                                    'profesor': profesor['nombre'],
+                                    'aula': f"Aula {curso['aula_id']} ({aula['tipo']})"
+                                }
+                                asignaciones_profesor[(curso['profesor_id'], dia)].add(bloque)
+                                asignaciones_aula[(curso['aula_id'], dia)].add(bloque)
+                                horas_asignadas += 0.75
+                                asignado = True
+                                break
+                    if asignado:
+                        break
+                if asignado:
+                    break
+            if not asignado:
+                # Implementar backtracking si no se puede asignar
+                raise ValueError(f"No se puede asignar el curso: {curso['nombre']}")
+
+    return horario
+
+def imprimir_horario(horario, indice):
+    print(f"\nHorario {indice+1}:")
+    for dia in DIAS:
+        print(f"\n{dia.upper()}")
+        print("Hora      | Curso        | Profesor      | Aula")
+        print("--------------------------------------------------")
+        for bloque in BLOQUES:
+            detalle = horario[dia][bloque]
+            if detalle:
+                hora_inicio = 7 + (bloque-1)*0.75
+                hora_str = f"{int(hora_inicio):02d}:{int((hora_inicio%1)*60):02d}"
+                print(f"{hora_str}-{(hora_inicio+0.75):.2f} | {detalle['curso'][:10]:<10} | {detalle['profesor'][:10]:<10} | {detalle['aula']}")
+
+# Generar 10 horarios diferentes
+for i in range(10):
+    try:
+        horario_final = generar_horario_inteligente(profesores, aulas, cursos)
+        imprimir_horario(horario_final, i)
+    except ValueError as e:
+        print(f"Error al generar horario {i+1}: {e}")
